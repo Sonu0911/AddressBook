@@ -1,14 +1,15 @@
 const express = require('express');
 const mongoose = require("mongoose")
 const router = express.Router();
-const UserModel = require("../model/user.js")
-const UserController = require("../controller/userController")
+const contactController = require("../controller/contactController")
+const mid=require("../middleware/authentication")
 
-router.post("/register", UserController.createUser)
-router.post("/login", UserController.loginUser)
-router.get("/user/:userId", UserController.getUser)
-router.put("/user/:userId", UserController.updateUser)
-router.delete("/user/:userId", UserController.userDeleted)
+
+router.post("/register", contactController.createContact)
+router.post("/login",contactController.loginContact)
+router.get("/contact/:contactId", mid.authenticate,contactController.getContact)
+router.put("/contact/:contactId", mid.authenticate,contactController.updateContact)
+router.delete("/contact/:contactId", mid.authenticate,contactController.contactDeleted)
 
 
 

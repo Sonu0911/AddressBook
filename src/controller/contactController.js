@@ -1,4 +1,4 @@
-const UserModel = require("../model/user")
+const contactModel = require("../model/contactModel")
 const jwt = require("jsonwebtoken");
 const mongoose = require('mongoose')
 
@@ -6,12 +6,12 @@ const isValidObjectId = function(objectId) {
     return mongoose.Types.ObjectId.isValid(objectId)
 }
 
-const createUser = async function(req, res) {
+const createContact = async function(req, res) {
     try {
         let data = req.body
         if (Object.keys(data) == 0) return res.status(400).send({ status: false, msg: "No input provided" })
 
-        const { fname, lname, phone, email, password } = data
+        const { fname, lname, phone, email,password,address } = data
 
         if (!fname) {
             return res.status(400).send({ status: false, msg: "fname is required" })
@@ -29,6 +29,7 @@ const createUser = async function(req, res) {
             return res.status(400).send({ status: false, msg: "valid email is required" })
         }
 
+        
         if (!password) {
             return res.status(400).send({ status: false, msg: "Plz enter valid password" })
         }
@@ -36,22 +37,25 @@ const createUser = async function(req, res) {
             return res.status(400).send({ status: false, msg: "passowrd min length is 8 and max len is 15" })
         }
     
+        if (!address) {
+            return res.status(400).send({ status: false, msg: "Plz enter valid address" })
+        }
 
-        let dupliPhone = await UserModel.find({ phone: phone })
+        let dupliPhone = await contactModel.find({ phone: phone })
         if (dupliPhone.length > 0) {
             return res.status(400).send({ status: false, msg: "phone number already exits" })
         }
 
-        let dupliEmail = await UserModel.find({ email: email })
+        let dupliEmail = await contactModel.find({ email: email })
         if (dupliEmail.length > 0) {
             return res.status(400).send({ status: false, msg: "email is already exists" })
         }
 
 
-        let savedData = await UserModel.create(data)
+        let savedData = await contactModel.create(data)
         return res.status(201).send({
             status: true,
-            msg: "user created successfully",
+            msg: "contact created successfully",
             data: savedData
         })
 
@@ -61,37 +65,35 @@ const createUser = async function(req, res) {
 }
 
 
-const loginUser = async function(req, res) {
+const loginContact = async function(req, res) {
     try {
-        let user = req.body
+        let contact = req.body
 
-        const {userName, password} = user
+        const {contactName, password} = contact
         
-        if (Object.keys(user) == 0) {
+        if (Object.keys(contact) == 0) {
             return res.status(400).send({ status: false, msg: "please provide data" })
         }
 
-        if (!userName) return res.status(400).send({ status: false, msg: "userName is required" }) 
-
-      //  if(!userName) return res.status(400).send({status: false, "msg":"user name not found"})
+        if (!contactName) return res.status(400).send({ status: false, msg: "contactName is required" }) 
 
         if (!password) {
             return res.status(400).send({ status: false, msg: "password is required" })
         }
 
-        let userDetailsFind = await UserModel.findOne({ email: userName, password: password })
-        if (!userDetailsFind) {
-            return res.status(400).send({ status: false, msg: "userName or password is not correct" })
+        let contactDetails = await contactModel.findOne({ email: contactName, password: password })
+        if (!contactDetails) {
+            return res.status(400).send({ status: false, msg: "contactName or password is not correct" })
         };
 
         let token = jwt.sign({
-            userId: userDetailsFind._id,
+            contactId: contactDetails._id,
            
         }, "rushi-159");
 
         res.status(200).send({
             status: true,
-            msg: "user login successfully",
+            msg: "contact login successfully",
             data: token
         })
     } catch (error) {
@@ -102,19 +104,19 @@ const loginUser = async function(req, res) {
 
 
 
-const getUser = async function(req, res) {
+const getContact = async function(req, res) {
     try {
-        let userId = req.params.userId.trim()
+        let contactId = req.params.contactId.trim()
 
-        if (!isValidObjectId(userId)) {
+        if (!isValidObjectId(contactId)) {
             return res.status(400).send({
                 status: false,
                 msg: "path param is invalid"
             })
         }
 
-        const findUser = await UserModel.findOne({ _id: userId, isDeleted: false })
-        if (!findUser) {
+        const findContact = await contactModel.findOne({ _id: contactId, isDeleted: false })
+        if (!findContact) {
             return res.status(404).send({
                 status: false,
                 msg: "could not found"
@@ -123,8 +125,8 @@ const getUser = async function(req, res) {
 
         return res.status(200).send({
             status: true,
-            msg: "user found",
-            data: findUser
+            msg: "contact found",
+            data: findContact
         })
 
 
@@ -136,21 +138,21 @@ const getUser = async function(req, res) {
     }
 }
 
-const updateUser = async function(req, res) {
+const updateContact = async function(req, res) {
     try {
-        userId = req.params.userId
+        contactId = req.params.contactId
 
-        if (Object.keys(userId).length == 0) {
+        if (Object.keys(contactId).length == 0) {
             return res.status(400).send({ status: false, msg: "please provide input" })
         }
 
-        if (!isValidObjectId(userId)) {
-            return res.status(400).send({ status: false, msg: "please provide a valid userId" })
+        if (!isValidObjectId(contactId)) {
+            return res.status(400).send({ status: false, msg: "please provide a valid contactId" })
         }
 
-        const userAvailable = await UserModel.findOne({ _id: userId, isDeleted: false })
-        if (!userAvailable) {
-            return res.status(400).send({ status: false, msg: "no user found" })
+        const contactAvailable = await contactModel.findOne({ _id: contactId, isDeleted: false })
+        if (!contactAvailable) {
+            return res.status(400).send({ status: false, msg: "no contact found" })
         }
 
         let obj = {}
@@ -193,9 +195,9 @@ const updateUser = async function(req, res) {
             obj.password = password.trim()
         }
 
-        const updatedUser = await UserModel.findByIdAndUpdate({ _id: userId }, { $set: obj }, { new: true })
+        const updatedContact = await contactModel.findByIdAndUpdate({ _id: contactId }, { $set: obj }, { new: true })
 
-        return res.status(200).send({ status: true, msg: "Updated user", data: updatedUser })
+        return res.status(200).send({ status: true, msg: "Updated contact", data: updatedContact })
 
 
     } catch (error) {
@@ -203,21 +205,21 @@ const updateUser = async function(req, res) {
     }
 }
 
-const userDeleted = async function(req, res) {
+const contactDeleted = async function(req, res) {
     try {
-        let userId = req.params.userId.trim()
+        let contactId = req.params.contactId.trim()
 
-        if (!isValidObjectId(userId)) {
-            return res.status(400).send({ status: false, msg: "Invalid userId" })
+        if (!isValidObjectId(contactId)) {
+            return res.status(400).send({ status: false, msg: "Invalid contactId" })
         }
 
-        const userFind = await UserModel.findOne({ _id: userId, isDeleted: false })
-        if (!userFind) {
-            return res.status(404).send({ status: false, msg: "userId is already deleted" })
+        const contactFind = await contactModel.findOne({ _id: contactId, isDeleted: false })
+        if (!contactFind) {
+            return res.status(404).send({ status: false, msg: "contactId is already deleted" })
         }
 
-        const userDeleted = await UserModel.findOneAndUpdate({ _id: userId }, { $set: { isDeleted: true, deletedAt: Date.now() } }, { new: true })
-        return res.status(200).send({ status: true, msg: "user is deleted", data: userDeleted })
+        const contactDeleted = await contactModel.findOneAndUpdate({ _id: contactId }, { $set: { isDeleted: true, deletedAt: Date.now() } }, { new: true })
+        return res.status(200).send({ status: true, msg: "contact is deleted", data: contactDeleted })
 
     } catch (err) {
         res.status(500).send({ status: false, msg: err.message });
@@ -225,8 +227,8 @@ const userDeleted = async function(req, res) {
 }
 
 
-module.exports.createUser = createUser
-module.exports.loginUser = loginUser
-module.exports.getUser=getUser
-module.exports.updateUser=updateUser
-module.exports.userDeleted=userDeleted
+module.exports.createContact = createContact
+module.exports.loginContact = loginContact
+module.exports.getContact=getContact
+module.exports.updateContact=updateContact
+module.exports.contactDeleted=contactDeleted

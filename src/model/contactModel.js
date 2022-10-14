@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const userSchema = new mongoose.Schema({
+const contactsSchema = new mongoose.Schema({
 
     fname: {
         type: String,
@@ -25,11 +25,16 @@ const userSchema = new mongoose.Schema({
         unique: true
 
     },
+   
     password: {
         type: String,
         required: true,
-        trim: true
+        minLength: [8, "password min length should be 8"],
+        maxLength: [15,
+            "password max length should be 15 "
+        ]
     },
+    
     address: {
         street: {
             type: String,
@@ -51,4 +56,4 @@ const userSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-module.exports = mongoose.model('users', userSchema)
+module.exports = mongoose.model('contacts', contactsSchema)
